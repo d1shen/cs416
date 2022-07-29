@@ -1,42 +1,137 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-<!-- Load d3.js -->
+
+
+<!-- 
+    Concept of Visualization 
+    Visualize Different Cars
+    Filter by Make, Engine Cylinders, highway mpg, city mpg
+
+    Message:
+
+    Narrative Structure:
+
+    Visual Structure:
+
+    Scenes:
+
+    Annotations:
+
+    Parameters:
+
+    Triggers:
+
+-->
+
 <script src="https://d3js.org/d3.v4.js"></script>
 
-<!-- Create a div where the graph will take place -->
 <div id="my_dataviz"></div>
 
 <script>
-
-    // set the dimensions and margins of the graph
-    var margin = { top: 10, right: 30, bottom: 30, left: 60 },
-        width = 460 - margin.left - margin.right,
-        height = 400 - margin.top - margin.bottom;
+    var margin = 50,
+        width = 1200 - margin - margin,
+        height = 1200 - margin - margin;
 
     // append the svg object to the body of the page
     var svg = d3.select("#my_dataviz")
         .append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
+        .attr("width", width + margin + margin)
+        .attr("height", height + margin + margin)
         .append("g")
         .attr("transform",
-            "translate(" + margin.left + "," + margin.top + ")");
+            "translate(" + margin + "," + margin + ")");
 
     //Read the data
-    d3.csv("https://raw.githubusercontent.com/holtzy/data_to_viz/master/Example_dataset/2_TwoNum.csv", function (data) {
+    d3.csv("https://flunky.github.io/cars2017.csv", function (data) {
+        // Color by avg effeciency (city mpg)
+        // Green = >30, Yellow = <= 30 and > 20, red = <= 20
 
-        // Add X axis
+        // create a tooltip
+        var tooltip = d3.select("#my_dataviz")
+            .append("div")
+            .style("opacity", 0)
+            .attr("class", "tooltip")
+            .style("background-color", "white")
+            .style("border", "solid")
+            .style("border-width", "2px")
+            .style("border-radius", "5px")
+            .style("padding", "5px")
+
+        // Highlight the specie that is hovered
+        var highlight = function (d) {
+            var cir_class;
+            if (d.AverageCityMPG > 25) {
+                cir_class = "fast";
+            } else if (d.AverageCityMPG <= 25 && d.AverageCityMPG > 15) {
+                cir_class = "medium";
+            } else {
+                cir_class = "slow";
+            }
+
+            d3.selectAll("circle")
+                .transition()
+                .duration(100)
+                .style("fill", "lightgrey")
+                .attr("r", 5)
+
+            d3.selectAll("." + cir_class)
+                .transition()
+                .duration(100)
+                .style("stroke", "black")
+                .style("fill", function (d) {
+                    console.log(cir_class);
+                    if (cir_class == "fast") {
+                        return "green";
+                    } else if (cir_class == "medium") {
+                        return "yellow"
+                    } else {
+                        return "red";
+                    }
+                });
+
+            tooltip
+                .style("opacity", 1)
+            d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1)
+        }
+
+        var continue_highlight = function (d) {
+            tooltip
+                .html("Make: " + d.Make + ", Fuel Type: " + d.Fuel + ", Engine Cylinders: "
+                    + d.EngineCylinders + ", Highway MPG: " + d.AverageHighwayMPG + ", City MPG: " + d.AverageCityMPG)
+                .style("left", (d3.mouse(this)[0] + 70) + "px")
+                .style("top", (d3.mouse(this)[1]) + "px")
+        }
+
+        // Highlight the specie that is hovered
+        var do_not_highlight = function () {
+            d3.selectAll("circle")
+                .transition()
+                .duration(200)
+                .style("fill", "lightgrey")
+                .attr("r", 10)
+                .style("stroke", "black")
+
+            tooltip
+                .style("opacity", 0)
+            d3.select(this)
+                .style("stroke", "none")
+                .style("opacity", 1)
+        }
+
+        // x-axis
         var x = d3.scaleLinear()
-            .domain([0, 4000])
+            .domain([0, d3.max(data, function (d) { return d.AverageCityMPG }) / 2])
             .range([0, width]);
         svg.append("g")
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x));
 
-        // Add Y axis
+        // y-axis
         var y = d3.scaleLinear()
-            .domain([0, 500000])
+            .domain([0, d3.max(data, function (d) { return d.AverageHighwayMPG }) / 2])
             .range([height, 0]);
         svg.append("g")
             .call(d3.axisLeft(y));
@@ -47,11 +142,23 @@
             .data(data)
             .enter()
             .append("circle")
-            .attr("cx", function (d) { return x(d.GrLivArea); })
-            .attr("cy", function (d) { return y(d.SalePrice); })
-            .attr("r", 1.5)
-            .style("fill", "#69b3a2")
-
+            .attr('class', function (d) {
+                if (d.AverageCityMPG > 25) {
+                    return "fast";
+                } else if (d.AverageCityMPG <= 25 && d.AverageCityMPG > 15) {
+                    return "medium";
+                } else {
+                    return "slow";
+                }
+            })
+            .attr("cx", function (d) { return x(d.AverageCityMPG); })
+            .attr("cy", function (d) { return y(d.AverageHighwayMPG); })
+            .attr("r", function (d) { return 10; })
+            .style("fill", "lightgrey")
+            .style("stroke", "black")
+            .on("mouseover", highlight)
+            .on("mousemove", continue_highlight)
+            .on("mouseleave", do_not_highlight);
     })
 
 </script>
