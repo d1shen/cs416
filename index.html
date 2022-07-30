@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 
-
-
 <!--Visualize Different Cars-->
 
 <script src="https://d3js.org/d3.v4.js"></script>
@@ -21,6 +19,29 @@
         .append("g")
         .attr("transform",
             "translate(" + margin + "," + margin + ")");
+
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", width / 1.55)
+        .attr("y", height + 40)
+        .text("Average Gas Usage in City (MPG)");
+
+    svg.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "end")
+        .attr("y", -35)
+        .attr("x", -450)
+        .attr("transform", "rotate(-90)")
+        .text("Average Gas Usage on Highway (MPG)");
+
+    svg.append("text")
+        .attr("class", "x label")
+        .attr("text-anchor", "end")
+        .attr("x", width / 1.55)
+        .attr("y", 0)
+        .attr("font-size", "2em")
+        .text("Car Visualization");
 
     d3.csv("https://flunky.github.io/cars2017.csv", function (data) {
         var popup = d3.select("#base")
