@@ -3,63 +3,42 @@
 
 
 
-<!-- 
-    Concept of Visualization 
-    Visualize Different Cars
-    Filter by Make, Engine Cylinders, highway mpg, city mpg
-
-    Message:
-
-    Narrative Structure:
-
-    Visual Structure:
-
-    Scenes:
-
-    Annotations:
-
-    Parameters:
-
-    Triggers:
-
--->
+<!--Visualize Different Cars-->
 
 <script src="https://d3js.org/d3.v4.js"></script>
 
-<div id="my_dataviz"></div>
+<div id="base"></div>
 
 <script>
     var margin = 50,
-        width = 1200 - margin - margin,
-        height = 1200 - margin - margin;
+        width = 1200 - 2 * margin,
+        height = 1200 - 2 * margin;
 
-    // append the svg object to the body of the page
-    var svg = d3.select("#my_dataviz")
+    var svg = d3.select("#base")
         .append("svg")
-        .attr("width", width + margin + margin)
-        .attr("height", height + margin + margin)
+        .attr("width", width + 2 * margin)
+        .attr("height", height + 2 * margin)
         .append("g")
         .attr("transform",
             "translate(" + margin + "," + margin + ")");
 
-    //Read the data
     d3.csv("https://flunky.github.io/cars2017.csv", function (data) {
-        // Color by avg effeciency (city mpg)
-        // Green = >30, Yellow = <= 30 and > 20, red = <= 20
-
-        // create a tooltip
-        var tooltip = d3.select("#my_dataviz")
+        var popup = d3.select("#base")
             .append("div")
             .style("opacity", 0)
-            .attr("class", "tooltip")
-            .style("background-color", "white")
+            .attr("class", "popup")
             .style("border", "solid")
-            .style("border-width", "2px")
+            .style("border-width", "5px")
             .style("border-radius", "5px")
             .style("padding", "5px")
 
-        // Highlight the specie that is hovered
         var highlight = function (d) {
+            popup
+                .style("opacity", 1)
+            d3.select(this)
+                .style("stroke", "black")
+                .style("opacity", 1)
+
             var cir_class;
             if (d.AverageCityMPG > 25) {
                 cir_class = "fast";
@@ -78,7 +57,6 @@
             d3.selectAll("." + cir_class)
                 .transition()
                 .duration(100)
-                .style("stroke", "black")
                 .style("fill", function (d) {
                     console.log(cir_class);
                     if (cir_class == "fast") {
@@ -89,36 +67,30 @@
                         return "red";
                     }
                 });
-
-            tooltip
-                .style("opacity", 1)
-            d3.select(this)
-                .style("stroke", "black")
-                .style("opacity", 1)
         }
 
         var continue_highlight = function (d) {
-            tooltip
-                .html("Make: " + d.Make + ", Fuel Type: " + d.Fuel + ", Engine Cylinders: "
-                    + d.EngineCylinders + ", Highway MPG: " + d.AverageHighwayMPG + ", City MPG: " + d.AverageCityMPG)
+            popup
                 .style("left", (d3.mouse(this)[0] + 70) + "px")
                 .style("top", (d3.mouse(this)[1]) + "px")
+                .html("Make: " + d.Make + ", Fuel Type: " + d.Fuel + ", Engine Cylinders: "
+                    + d.EngineCylinders + ", Highway MPG: " + d.AverageHighwayMPG + ", City MPG: " + d.AverageCityMPG)
+
         }
 
-        // Highlight the specie that is hovered
-        var do_not_highlight = function () {
+        var stop_highlight = function () {
+            popup
+                .style("opacity", 0)
+            d3.select(this)
+                .style("stroke", "none")
+                .style("opacity", 1)
+
             d3.selectAll("circle")
                 .transition()
                 .duration(200)
                 .style("fill", "lightgrey")
                 .attr("r", 10)
-                .style("stroke", "black")
-
-            tooltip
-                .style("opacity", 0)
-            d3.select(this)
                 .style("stroke", "none")
-                .style("opacity", 1)
         }
 
         // x-axis
@@ -136,9 +108,8 @@
         svg.append("g")
             .call(d3.axisLeft(y));
 
-        // Add dots
         svg.append('g')
-            .selectAll("dot")
+            .selectAll()
             .data(data)
             .enter()
             .append("circle")
@@ -155,10 +126,9 @@
             .attr("cy", function (d) { return y(d.AverageHighwayMPG); })
             .attr("r", function (d) { return 10; })
             .style("fill", "lightgrey")
-            .style("stroke", "black")
+            .style("stroke", "none")
             .on("mouseover", highlight)
             .on("mousemove", continue_highlight)
-            .on("mouseleave", do_not_highlight);
+            .on("mouseleave", stop_highlight);
     })
-
 </script>
